@@ -235,7 +235,8 @@
                     throw new Error(errorData.error || "Erro ao buscar dados do dashboard");
                 }
 
-                const data = await response.json();
+                const responseData = await response.json();
+                const data = Array.isArray(responseData) ? responseData[0] : responseData;
                 console.log("Dados do dashboard:", data);
                 updateDashboardUI(data);
             } catch (error) {
@@ -256,9 +257,10 @@
             document.getElementById("taxaOcupacao").innerText = `${data.taxaOcupacao}%`;
             
             // Atualizar as badges de comparação (exemplo simplificado)
-            document.getElementById("receitaTotalBadge").innerText = `${data.receitaTotalChange >= 0 ? "+" : ""}${data.receitaTotalChange}% vs semana anterior`;
-            document.getElementById("agendamentosBadge").innerText = `${data.totalAgendamentosChange >= 0 ? "+" : ""}${data.totalAgendamentosChange} vs semana anterior`;
-            document.getElementById("clientesUnicosBadge").innerText = `${data.clientesUnicosChange >= 0 ? "+" : ""}${data.clientesUnicosChange} vs semana anterior`;
+            const comparacao = data.comparacaoSemanaAnterior;
+            document.getElementById("receitaTotalBadge").innerText = `${comparacao.receitaVariacao >= 0 ? "+" : ""}${comparacao.receitaVariacao}% vs semana anterior`;
+            document.getElementById("agendamentosBadge").innerText = `${comparacao.agendamentosVariacao >= 0 ? "+" : ""}${comparacao.agendamentosVariacao} agendamentos`;
+            document.getElementById("clientesUnicosBadge").innerText = `${comparacao.clientesVariacao >= 0 ? "+" : ""}${comparacao.clientesVariacao} clientes`;            
             document.getElementById("ticketMedioBadge").innerText = `${data.ticketMedioChange >= 0 ? "+" : ""}${data.ticketMedioChange}% vs semana anterior`;
 
             // Atualizar o resumo
