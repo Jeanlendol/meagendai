@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Performance - Relatórios Empresariais</title>
+    <meta name="description" content="Dashboard interativo para visualização de relatórios de performance e métricas de negócio">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <div class="flex justify-center mb-6">
+                <div class="bg-blue-600 p-4 rounded-full">
+                    <i data-lucide="bar-chart-3" class="h-12 w-12 text-white"></i>
+                </div>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                Dashboard de Performance
+            </h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Relatórios automatizados de desempenho empresarial com métricas detalhadas 
+                e insights para o crescimento do seu negócio.
+            </p>
+        </div>
+
+        <!-- Features -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <div class="bg-white rounded-lg shadow-sm border p-6 text-center">
+                <div class="flex justify-center mb-4">
+                    <i data-lucide="dollar-sign" class="h-8 w-8 text-green-500"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Receita Total</h3>
+                <p class="text-sm text-gray-600">
+                    Acompanhe sua receita em tempo real com comparações semanais
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border p-6 text-center">
+                <div class="flex justify-center mb-4">
+                    <i data-lucide="users" class="h-8 w-8 text-blue-500"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Clientes Únicos</h3>
+                <p class="text-sm text-gray-600">
+                    Monitore o crescimento da sua base de clientes
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border p-6 text-center">
+                <div class="flex justify-center mb-4">
+                    <i data-lucide="trending-up" class="h-8 w-8 text-purple-500"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Performance</h3>
+                <p class="text-sm text-gray-600">
+                    Análise detalhada por serviço e tendências de crescimento
+                </p>
+            </div>
+        </div>
+
+        <!-- Access Info -->
+        <div class="bg-orange-50 border border-orange-200 rounded-lg p-6">
+            <div class="flex items-center space-x-2 text-orange-800 mb-4">
+                <i data-lucide="alert-circle" class="h-5 w-5"></i>
+                <h3 class="text-lg font-semibold">Como Acessar Seu Relatório</h3>
+            </div>
+            <div class="text-orange-700 space-y-3">
+                <p>
+                    <strong>Via WhatsApp:</strong> Envie uma mensagem para sua assistente virtual 
+                    solicitando o relatório semanal ou mensal.
+                </p>
+                <p>
+                    <strong>Automático:</strong> Receba automaticamente toda segunda-feira 
+                    um link com o relatório da semana anterior.
+                </p>
+                <p>
+                    <strong>Personalizado:</strong> Solicite relatórios de períodos específicos 
+                    através de comandos como "relatório do mês passado".
+                </p>
+            </div>
+        </div>
+
+        <!-- Dashboard Demo -->
+        <div id="dashboard" class="hidden">
+            <!-- Loading Spinner -->
+            <div id="loading-spinner" class="hidden text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p class="mt-2 text-gray-600">Carregando dados do dashboard...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="dashboard-error" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center">
+                    <i data-lucide="alert-circle" class="h-5 w-5 text-red-500 mr-2"></i>
+                    <span class="text-red-700 font-medium">Erro ao carregar dados:</span>
+                </div>
+                <p class="text-red-600 mt-1" id="error-message"></p>
+            </div>
+
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    Dashboard de Performance
+                </h1>
+                <p class="text-gray-600">
+                    Relatório semanal de desempenho do seu negócio
+                </p>
+            </div>
+
+            <!-- Métricas Principais -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Receita Total</h3>
+                        <i data-lucide="dollar-sign" class="h-4 w-4 text-gray-400"></i>
+                    </div>
+                    <div id="receitaTotal" class="text-2xl font-bold text-gray-900">R$ 2.450,00</div>
+                    <div class="mt-2">
+                        <span id="receitaTotalBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            +12% vs semana anterior
+                        </span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Agendamentos</h3>
+                        <i data-lucide="calendar" class="h-4 w-4 text-gray-400"></i>
+                    </div>
+                    <div id="totalAgendamentos" class="text-2xl font-bold text-gray-900">45</div>
+                    <div class="mt-2">
+                        <span id="agendamentosBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            +8 vs semana anterior
+                        </span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Clientes Únicos</h3>
+                        <i data-lucide="users" class="h-4 w-4 text-gray-400"></i>
+                    </div>
+                    <div id="clientesUnicos" class="text-2xl font-bold text-gray-900">32</div>
+                    <div class="mt-2">
+                        <span id="clientesUnicosBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            +5 vs semana anterior
+                        </span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Ticket Médio</h3>
+                        <i data-lucide="trending-up" class="h-4 w-4 text-gray-400"></i>
+                    </div>
+                    <div id="ticketMedio" class="text-2xl font-bold text-gray-900">R$ 54,44</div>
+                    <div class="mt-2">
+                        <span id="ticketMedioBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            +3% vs semana anterior
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumo -->
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h3 class="text-lg font-semibold mb-4">Resumo do Período</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium">Taxa de Ocupação</span>
+                        <span id="taxaOcupacao" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            87.5%
+                        </span>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <p id="resumoTexto">
+                            Excelente performance esta semana! Sua receita cresceu 12% em comparação 
+                            com a semana anterior, e você atendeu 5 novos clientes únicos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-12 text-sm text-gray-500">
+            <p>
+                Dashboard desenvolvido para otimizar a gestão do seu negócio
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar ícones Lucide
+        lucide.createIcons();
+
+        // Função para extrair token da URL
+        function getTokenFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryToken = urlParams.get("token");
+            
+            if (queryToken) {
+                return queryToken;
+            }
+            
+            const pathParts = window.location.pathname.split("/");
+            if (pathParts.length >= 3 && pathParts[1] === "dashboard") {
+                return pathParts[2];
+            }
+            
+            return null;
+        }
+
+        // Função para buscar dados do dashboard
+        async function fetchDashboardData(token) {
+            const SUPABASE_FUNCTION_URL = "https://https://jdfdjpwabrttwadxvrrb.supabase.co/functions/v1/get-company-report"; // Substitua <YOUR_PROJECT_REF> pelo ID do seu projeto Supabase
+            
+            try {
+                const response = await fetch(SUPABASE_FUNCTION_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ token: token }) // Enviando o token no corpo da requisição
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Erro ao buscar dados do dashboard");
+                }
+
+                const data = await response.json();
+                console.log("Dados do dashboard:", data);
+                updateDashboardUI(data);
+            } catch (error) {
+                console.error("Erro ao buscar dados do dashboard:", error);
+                document.getElementById("error-message").innerText = error.message;
+                document.getElementById("dashboard-error").classList.remove("hidden");
+            } finally {
+                document.getElementById("loading-spinner").classList.add("hidden");
+            }
+        }
+
+        // Função para atualizar a UI do dashboard com os dados recebidos
+        function updateDashboardUI(data) {
+            document.getElementById("receitaTotal").innerText = `R$ ${data.receitaTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+            document.getElementById("totalAgendamentos").innerText = data.totalAgendamentos;
+            document.getElementById("clientesUnicos").innerText = data.clientesUnicos;
+            document.getElementById("ticketMedio").innerText = `R$ ${data.ticketMedio.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+            document.getElementById("taxaOcupacao").innerText = `${data.taxaOcupacao}%`;
+            
+            // Atualizar as badges de comparação (exemplo simplificado)
+            document.getElementById("receitaTotalBadge").innerText = `${data.receitaTotalChange >= 0 ? "+" : ""}${data.receitaTotalChange}% vs semana anterior`;
+            document.getElementById("agendamentosBadge").innerText = `${data.totalAgendamentosChange >= 0 ? "+" : ""}${data.totalAgendamentosChange} vs semana anterior`;
+            document.getElementById("clientesUnicosBadge").innerText = `${data.clientesUnicosChange >= 0 ? "+" : ""}${data.clientesUnicosChange} vs semana anterior`;
+            document.getElementById("ticketMedioBadge").innerText = `${data.ticketMedioChange >= 0 ? "+" : ""}${data.ticketMedioChange}% vs semana anterior`;
+
+            // Atualizar o resumo
+            document.getElementById("resumoTexto").innerText = data.resumo || "";
+
+            // Mostrar o dashboard e esconder a página inicial
+            document.getElementById("dashboard").classList.remove("hidden");
+            document.body.classList.remove("gradient-bg");
+            document.body.classList.add("bg-gray-50");
+        }
+
+        // Lógica principal ao carregar a página
+        const token = getTokenFromUrl();
+        
+        if (token) {
+            console.log("Token encontrado:", token);
+            document.getElementById("loading-spinner").classList.remove("hidden");
+            fetchDashboardData(token);
+        } else {
+            console.log("Nenhum token encontrado na URL");
+            document.getElementById("initial-content").classList.remove("hidden");
+        }
+
+        // Inicializar ícones Lucide
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
