@@ -223,11 +223,11 @@
             try {
 
                 const response = await fetch(SUPABASE_FUNCTION_URL, {
-  method: "GET",
-  headers: {
-    "Authorization": `Bearer ${token}`
-  }
-});
+         method: "GET",
+        headers: {
+        "Authorization": `Bearer ${token}`
+        }
+        });
 
 
                 if (!response.ok) {
