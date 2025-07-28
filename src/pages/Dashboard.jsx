@@ -52,7 +52,6 @@ export function Dashboard() {
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:54321'
 
-
       const urlWithParams = `${supabaseUrl}/get-company-report`;
 
       const response = await fetch(urlWithParams, {
@@ -72,8 +71,25 @@ export function Dashboard() {
 
       const data = await response.json()
       
-      console.log("Dados recebidos da API:", data);  // Adicionando o log dos dados recebidos
-      setReportData(data)
+      console.log("Dados recebidos da API:", data);
+      
+      // Normalizar dados para estrutura esperada pelo frontend
+      const normalizedData = {
+        receitaTotal: data.receitaTotal || 0,
+        totalAgendamentos: data.totalAgendamentos || 0,
+        clientesUnicos: data.clientesUnicos || 0,
+        ticketMedio: data.ticketMedio || 0,
+        taxaOcupacao: data.taxaOcupacao || 0,
+        
+        // Dados que podem não existir - usar valores padrão
+        comparacaoSemanaAnterior: data.comparacaoSemanaAnterior || null,
+        performanceServicos: data.performanceServicos || {},
+        receitaPorDia: data.receitaPorDia || {},
+        topClientes: data.topClientes || [],
+        agendamentosDetalhados: data.agendamentosDetalhados || []
+      }
+      
+      setReportData(normalizedData)
       setLastUpdate(new Date())
     } catch (err) {
       console.error('Erro ao buscar dados:', err)
@@ -132,12 +148,17 @@ export function Dashboard() {
   }
 
   const getTrend = (current, variation) => {
+    if (!variation) return 'neutral'
     if (variation > 0) return 'up'
     if (variation < 0) return 'down'
     return 'neutral'
   }
 
-  console.log("Dados de performance para o gráfico:", reportData.performanceServicos);  // Log dos dados de performance
+  // Verificar se há dados para gráficos
+  const hasPerformanceData = reportData.performanceServicos && Object.keys(reportData.performanceServicos).length > 0
+  const hasRevenueData = reportData.receitaPorDia && Object.keys(reportData.receitaPorDia).length > 0
+  const hasTopClients = reportData.topClientes && reportData.topClientes.length > 0
+  const hasDetailsData = reportData.agendamentosDetalhados && reportData.agendamentosDetalhados.length > 0
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -258,32 +279,85 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Top Clientes */}
+          {/* Top Clientes - só exibe se houver dados */}
           <div className="lg:col-span-2">
-            <TopClients data={reportData.topClientes} />
+            {hasTopClients ? (
+              <TopClients data={reportData.topClientes} />
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top 5 Clientes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-center h-32 text-muted-foreground">
+                    Dados de clientes não disponíveis
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
 
-        {/* Gráficos */}
+        {/* Gráficos - só exibe se houver dados */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <PerformanceChart 
-            data={reportData.performanceServicos} 
-            type="bar"
-            title="Performance por Serviço"
-          />
-          <RevenueChart 
-            data={reportData.receitaPorDia}
-            title="Receita Diária"
-          />
+          {hasPerformanceData ? (
+            <PerformanceChart 
+              data={reportData.performanceServicos} 
+              type="bar"
+              title="Performance por Serviço"
+            />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance por Serviço</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-center h-64 text-muted-foreground">
+                  Dados de performance não disponíveis
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {hasRevenueData ? (
+            <RevenueChart 
+              data={reportData.receitaPorDia}
+              title="Receita Diária"
+            />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Receita Diária</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-center h-64 text-muted-foreground">
+                  Dados de receita diária não disponíveis
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        {/* Gráfico de Pizza */}
+        {/* Gráfico de Pizza e Resumo */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <PerformanceChart 
-            data={reportData.performanceServicos} 
-            type="pie"
-            title="Distribuição da Receita"
-          />
+          {hasPerformanceData ? (
+            <PerformanceChart 
+              data={reportData.performanceServicos} 
+              type="pie"
+              title="Distribuição da Receita"
+            />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Distribuição da Receita</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-center h-64 text-muted-foreground">
+                  Dados de distribuição não disponíveis
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
           {/* Card de Resumo */}
           <Card>
@@ -295,22 +369,25 @@ export function Dashboard() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Serviços Oferecidos</span>
                   <span className="font-semibold">
-                    {Object.keys(reportData.performanceServicos).length}
+                    {hasPerformanceData ? Object.keys(reportData.performanceServicos).length : 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Dias com Atendimento</span>
                   <span className="font-semibold">
-                    {Object.keys(reportData.receitaPorDia).length}
+                    {hasRevenueData ? Object.keys(reportData.receitaPorDia).length : 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Receita por Cliente</span>
                   <span className="font-semibold">
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL'
-                    }).format(reportData.receitaTotal / reportData.clientesUnicos)}
+                    {reportData.clientesUnicos > 0 ? 
+                      new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(reportData.receitaTotal / reportData.clientesUnicos) :
+                      'N/A'
+                    }
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -325,12 +402,26 @@ export function Dashboard() {
           </Card>
         </div>
 
-        {/* Tabela de Detalhes */}
-        <DetailsTable 
-          data={reportData.agendamentosDetalhados}
-          title="Todos os Agendamentos do Período"
-        />
+        {/* Tabela de Detalhes - só exibe se houver dados */}
+        {hasDetailsData ? (
+          <DetailsTable 
+            data={reportData.agendamentosDetalhados}
+            title="Todos os Agendamentos do Período"
+          />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Todos os Agendamentos do Período</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center h-32 text-muted-foreground">
+                Dados detalhados de agendamentos não disponíveis
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
 }
+
