@@ -71,6 +71,8 @@ export function Dashboard() {
       }
 
       const data = await response.json()
+      
+      console.log("Dados recebidos da API:", data);  // Adicionando o log dos dados recebidos
       setReportData(data)
       setLastUpdate(new Date())
     } catch (err) {
@@ -134,6 +136,8 @@ export function Dashboard() {
     if (variation < 0) return 'down'
     return 'neutral'
   }
+
+  console.log("Dados de performance para o gráfico:", reportData.performanceServicos);  // Log dos dados de performance
 
   return (
     <div className="min-h-screen bg-gray-50">
