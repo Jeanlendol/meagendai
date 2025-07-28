@@ -1,9 +1,11 @@
-import animate from 'tw-animate-css'
+const animate = require('tw-animate-css');
 
-export default {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {},
   },
   plugins: [animate],
-}
+};
+
