@@ -1,11 +1,9 @@
-/** @type {import('tailwindcss').Config} */
+import animate from 'tw-animate-css'
+
 export default {
-  content: [
-    './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [animate],
 }
