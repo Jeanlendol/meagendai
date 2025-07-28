@@ -7,6 +7,8 @@
     <meta name="description" content="Dashboard interativo para visualização de relatórios de performance e métricas de negócio">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         .gradient-bg {
             background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
@@ -155,15 +157,110 @@
 
                 <div class="bg-white rounded-lg shadow-sm border p-6">
                     <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-sm font-medium text-gray-600">Ticket Médio</h3>
+                        <h3 class="text-sm font-medium text-gray-600">Taxa de Ocupação</h3>
                         <i data-lucide="trending-up" class="h-4 w-4 text-gray-400"></i>
                     </div>
-                    <div id="ticketMedio" class="text-2xl font-bold text-gray-900">R$ 54,44</div>
+                    <div id="taxaOcupacao" class="text-2xl font-bold text-gray-900">87.5%</div>
                     <div class="mt-2">
-                        <span id="ticketMedioBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            +3% vs semana anterior
+                        <span id="taxaOcupacaoBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Confirmados vs Total
                         </span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Comparações com Semana Anterior -->
+            <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i data-lucide="trending-up" class="h-5 w-5 mr-2 text-blue-500"></i>
+                    Comparação com Semana Anterior
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="text-center">
+                        <div class="text-sm text-gray-600 mb-1">Receita</div>
+                        <div id="variacaoReceita" class="text-lg font-bold text-green-600">+12%</div>
+                        <div id="variacaoReceitaAbsoluta" class="text-xs text-gray-500">+R$ 262,50</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm text-gray-600 mb-1">Agendamentos</div>
+                        <div id="variacaoAgendamentos" class="text-lg font-bold text-green-600">+8</div>
+                        <div id="variacaoAgendamentosPerc" class="text-xs text-gray-500">+21.6%</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm text-gray-600 mb-1">Clientes</div>
+                        <div id="variacaoClientes" class="text-lg font-bold text-green-600">+5</div>
+                        <div id="variacaoClientesPerc" class="text-xs text-gray-500">+18.5%</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm text-gray-600 mb-1">Ticket Médio</div>
+                        <div id="variacaoTicket" class="text-lg font-bold text-green-600">+3%</div>
+                        <div id="variacaoTicketAbsoluta" class="text-xs text-gray-500">+R$ 1,58</div>
+                    </div>
+                </div>
+
+            <!-- Gráfico de Receita por Dia -->
+            <div class="bg-white p-4 rounded-xl shadow-md my-4">
+                <h2 class="text-lg font-semibold mb-2">📅 Receita por Dia</h2>
+                <canvas id="graficoReceitaPorDia" height="100"></canvas>
+            </div>
+
+            <!-- Gráfico de Top Clientes -->
+            <div class="bg-white p-4 rounded-xl shadow-md my-4">
+                <h2 class="text-lg font-semibold mb-2">👤 Top Clientes</h2>
+                <canvas id="graficoTopClientes" height="100"></canvas>
+            </div>
+
+            <!-- Gráfico de Performance por Serviço (Barras) -->
+            <div class="bg-white p-4 rounded-xl shadow-md my-4">
+                <h2 class="text-lg font-semibold mb-2">📊 Performance por Tipo de Serviço</h2>
+                <canvas id="graficoPerformanceServicos" height="100"></canvas>
+            </div>
+
+            <!-- Gráfico de Distribuição da Receita (Pizza) -->
+            <div class="bg-white p-4 rounded-xl shadow-md my-4">
+                <h2 class="text-lg font-semibold mb-2">🍕 Distribuição da Receita</h2>
+                <canvas id="graficoDistribuicaoReceita" height="100"></canvas>
+            </div>
+
+            <!-- Ranking Top 5 Clientes -->
+            <div class="bg-white p-4 rounded-xl shadow-md my-4">
+                <h2 class="text-lg font-semibold mb-4">🏆 Top 5 Clientes do Período</h2>
+                <div id="rankingClientes" class="space-y-3">
+                    <!-- Será preenchido dinamicamente -->
+                </div>
+            </div>
+
+            <!-- Tabela Detalhada de Agendamentos -->
+            <div class="bg-white p-4 rounded-xl shadow-md my-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold">📋 Agendamentos Detalhados</h2>
+                    <div class="flex space-x-2">
+                        <select id="filtroStatus" class="px-3 py-1 border rounded text-sm">
+                            <option value="">Todos os Status</option>
+                            <option value="confirmado">Confirmados</option>
+                            <option value="cancelado">Cancelados</option>
+                            <option value="pendente">Pendentes</option>
+                        </select>
+                        <select id="filtroServico" class="px-3 py-1 border rounded text-sm">
+                            <option value="">Todos os Serviços</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Serviço</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaAgendamentos" class="bg-white divide-y divide-gray-200">
+                            <!-- Será preenchido dinamicamente -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -218,17 +315,15 @@
 
         // Função para buscar dados do dashboard
         async function fetchDashboardData(token) {
-            const SUPABASE_FUNCTION_URL = "https://jdfdjpwabrttwadxvrrb.supabase.co/functions/v1/get-company-report"; // Substitua <YOUR_PROJECT_REF> pelo ID do seu projeto Supabase
+            const SUPABASE_FUNCTION_URL = "https://jdfdjpwabrttwadxvrrb.supabase.co/functions/v1/get-company-report";
             
             try {
-
                 const response = await fetch(SUPABASE_FUNCTION_URL, {
-         method: "GET",
-        headers: {
-        "Authorization": `Bearer ${token}`
-        }
-        });
-
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -248,28 +343,544 @@
             }
         }
 
+        // Função para renderizar gráficos
+        function renderGraficos(data) {
+            // Receita por Dia (Linha)
+            if (data.receitaPorDia) {
+                const dias = Object.keys(data.receitaPorDia).sort();
+                const valores = dias.map(dia => data.receitaPorDia[dia]);
+                
+                // Formatar as datas para exibição
+                const diasFormatados = dias.map(dia => {
+                    const date = new Date(dia);
+                    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                });
+                
+                new Chart(document.getElementById("graficoReceitaPorDia"), {
+                    type: 'line',
+                    data: {
+                        labels: diasFormatados,
+                        datasets: [{
+                            label: 'Receita (R$)',
+                            data: valores,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59,130,246,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'R$ ' + context.parsed.y.toFixed(2);
+                                    }
+                                }
+                            }
+                        },
+                        scales: { 
+                            y: { 
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return 'R$ ' + value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Top Clientes (Barras Horizontais)
+            if (data.topClientes && data.topClientes.length > 0) {
+                const nomes = data.topClientes.map(c => c.nome);
+                const totais = data.topClientes.map(c => c.total);
+                
+                new Chart(document.getElementById("graficoTopClientes"), {
+                    type: 'bar',
+                    data: {
+                        labels: nomes,
+                        datasets: [{
+                            label: 'Receita por Cliente (R$)',
+                            data: totais,
+                            backgroundColor: '#10b981'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'R$ ' + context.parsed.x.toFixed(2);
+                                    }
+                                }
+                            }
+                        },
+                        scales: { 
+                            x: { 
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return 'R$ ' + value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Performance por Serviço (Barras)
+            if (data.performanceServicos) {
+                const servicos = Object.keys(data.performanceServicos);
+                const quantidades = servicos.map(s => data.performanceServicos[s].quantidade || 0);
+                const receitas = servicos.map(s => data.performanceServicos[s].receita || 0);
+                
+                new Chart(document.getElementById("graficoPerformanceServicos"), {
+                    type: 'bar',
+                    data: {
+                        labels: servicos,
+                        datasets: [{
+                            label: 'Quantidade',
+                            data: quantidades,
+                            backgroundColor: '#3b82f6',
+                            yAxisID: 'y-quantidade'
+                        }, {
+                            label: 'Receita (R$)',
+                            data: receitas,
+                            backgroundColor: '#10b981',
+                            yAxisID: 'y-receita'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        if (context.dataset.label === 'Receita (R$)') {
+                                            return 'Receita: R$ ' + context.parsed.y.toFixed(2);
+                                        }
+                                        return context.dataset.label + ': ' + context.parsed.y;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            'y-quantidade': {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            'y-receita': {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                beginAtZero: true,
+                                grid: {
+                                    drawOnChartArea: false
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return 'R$ ' + value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Distribuição da Receita (Pizza)
+            if (data.performanceServicos) {
+                const servicos = Object.keys(data.performanceServicos);
+                const receitas = servicos.map(s => data.performanceServicos[s].receita || 0);
+                
+                new Chart(document.getElementById("graficoDistribuicaoReceita"), {
+                    type: 'doughnut',
+                    data: {
+                        labels: servicos,
+                        datasets: [{
+                            data: receitas,
+                            backgroundColor: [
+                                '#3b82f6', '#10b981', '#f59e0b', '#6366f1', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                        return context.label + ': R$ ' + context.parsed.toFixed(2) + ' (' + percentage + '%)';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Função para renderizar ranking de clientes
+        function renderRankingClientes(topClientes, data) {
+            const container = document.getElementById("rankingClientes");
+            container.innerHTML = '';
+            
+            if (topClientes && topClientes.length > 0) {
+                topClientes.slice(0, 5).forEach((cliente, index) => {
+                    const posicao = index + 1;
+                    const medalha = posicao === 1 ? '🥇' : posicao === 2 ? '🥈' : posicao === 3 ? '🥉' : '🏅';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors';
+                    item.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">${medalha}</span>
+                            <div>
+                                <div class="font-medium text-gray-900">${cliente.nome}</div>
+                                <div class="text-sm text-gray-500">Cliente ${posicao === 1 ? 'VIP' : 'frequente'}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-lg">R$ ${cliente.total.toFixed(2)}</div>
+                            <div class="text-xs text-gray-500">${((cliente.total / data.receitaTotal) * 100).toFixed(1)}% do total</div>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+                
+                // Se houver menos de 5 clientes, adicionar mensagem
+                if (topClientes.length < 5) {
+                    const info = document.createElement('div');
+                    info.className = 'text-center text-sm text-gray-500 mt-4 p-3 bg-blue-50 rounded-lg';
+                    info.innerHTML = `<i data-lucide="info" class="inline-block h-4 w-4 mr-1"></i> ${topClientes.length} cliente${topClientes.length > 1 ? 's' : ''} no período`;
+                    container.appendChild(info);
+                    // Recriar ícones Lucide para os novos elementos
+                    lucide.createIcons();
+                }
+            } else {
+                container.innerHTML = '<p class="text-center text-gray-500">Nenhum cliente encontrado no período</p>';
+            }
+        }
+
+        // Função para renderizar tabela de agendamentos
+        function renderTabelaAgendamentos(agendamentos) {
+            const tbody = document.getElementById("tabelaAgendamentos");
+            const filtroServico = document.getElementById("filtroServico");
+            
+            tbody.innerHTML = '';
+            filtroServico.innerHTML = '<option value="">Todos os Serviços</option>';
+            
+            if (agendamentos && agendamentos.length > 0) {
+                // Mapear os dados para o formato esperado
+                const agendamentosMapeados = agendamentos.map(a => ({
+                    data: a.data_agendamento,
+                    cliente: a.nome,
+                    servico: a.descricao,
+                    valor: a.preco,
+                    status: a.status
+                }));
+                
+                // Preencher filtro de serviços
+                const servicosUnicos = [...new Set(agendamentosMapeados.map(a => a.servico))].sort();
+                servicosUnicos.forEach(servico => {
+                    const option = document.createElement('option');
+                    option.value = servico;
+                    option.textContent = servico;
+                    filtroServico.appendChild(option);
+                });
+                
+                // Ordenar por data decrescente
+                agendamentosMapeados.sort((a, b) => new Date(b.data) - new Date(a.data));
+                
+                // Renderizar linhas da tabela
+                agendamentosMapeados.forEach(agendamento => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    const statusClass = agendamento.status === 'confirmado' ? 'bg-green-100 text-green-800' : 
+                                       agendamento.status === 'cancelado' ? 'bg-red-100 text-red-800' : 
+                                       'bg-yellow-100 text-yellow-800';
+                    
+                    const data = new Date(agendamento.data);
+                    const dataFormatada = data.toLocaleDateString('pt-BR');
+                    const horaFormatada = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div>${dataFormatada}</div>
+                            <div class="text-xs text-gray-500">${horaFormatada}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${agendamento.cliente}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${agendamento.servico}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">R$ ${agendamento.valor.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                                ${agendamento.status}
+                            </span>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                // Adicionar funcionalidade de filtros
+                setupFiltros(agendamentosMapeados);
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Nenhum agendamento encontrado</td></tr>';
+            }
+        }
+
+        // Função para configurar filtros da tabela
+        function setupFiltros(agendamentos) {
+            const filtroStatus = document.getElementById("filtroStatus");
+            const filtroServico = document.getElementById("filtroServico");
+            
+            function aplicarFiltros() {
+                const statusSelecionado = filtroStatus.value;
+                const servicoSelecionado = filtroServico.value;
+                
+                const agendamentosFiltrados = agendamentos.filter(a => {
+                    const matchStatus = !statusSelecionado || a.status === statusSelecionado;
+                    const matchServico = !servicoSelecionado || a.servico === servicoSelecionado;
+                    return matchStatus && matchServico;
+                });
+                
+                const tbody = document.getElementById("tabelaAgendamentos");
+                tbody.innerHTML = '';
+                
+                if (agendamentosFiltrados.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Nenhum agendamento encontrado com os filtros selecionados</td></tr>';
+                    return;
+                }
+                
+                agendamentosFiltrados.forEach(agendamento => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    const statusClass = agendamento.status === 'confirmado' ? 'bg-green-100 text-green-800' : 
+                                       agendamento.status === 'cancelado' ? 'bg-red-100 text-red-800' : 
+                                       'bg-yellow-100 text-yellow-800';
+                    
+                    const data = new Date(agendamento.data);
+                    const dataFormatada = data.toLocaleDateString('pt-BR');
+                    const horaFormatada = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div>${dataFormatada}</div>
+                            <div class="text-xs text-gray-500">${horaFormatada}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${agendamento.cliente}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${agendamento.servico}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">R$ ${agendamento.valor.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                                ${agendamento.status}
+                            </span>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            
+            filtroStatus.addEventListener('change', aplicarFiltros);
+            filtroServico.addEventListener('change', aplicarFiltros);
+        }
+
         // Função para atualizar a UI do dashboard com os dados recebidos
         function updateDashboardUI(data) {
+            // Atualizar cards principais
             document.getElementById("receitaTotal").innerText = `R$ ${data.receitaTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
             document.getElementById("totalAgendamentos").innerText = data.totalAgendamentos;
             document.getElementById("clientesUnicos").innerText = data.clientesUnicos;
-            document.getElementById("ticketMedio").innerText = `R$ ${data.ticketMedio.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+            
+            // Atualizar Ticket Médio no card principal
+            const ticketMedioCard = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-4.gap-6.mb-8').children[2];
+            ticketMedioCard.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Ticket Médio</h3>
+                    <i data-lucide="receipt" class="h-4 w-4 text-gray-400"></i>
+                </div>
+                <div class="text-2xl font-bold text-gray-900">R$ ${data.ticketMedio.toFixed(2)}</div>
+                <div class="mt-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Valor médio por serviço
+                    </span>
+                </div>
+            `;
+            
+            // Recriar ícone Lucide após atualizar o HTML
+            lucide.createIcons();
+            
             document.getElementById("taxaOcupacao").innerText = `${data.taxaOcupacao}%`;
             
-            // Atualizar as badges de comparação (exemplo simplificado)
-            const comparacao = data.comparacaoSemanaAnterior;
-            document.getElementById("receitaTotalBadge").innerText = `${comparacao.receitaVariacao >= 0 ? "+" : ""}${comparacao.receitaVariacao}% vs semana anterior`;
-            document.getElementById("agendamentosBadge").innerText = `${comparacao.agendamentosVariacao >= 0 ? "+" : ""}${comparacao.agendamentosVariacao} agendamentos`;
-            document.getElementById("clientesUnicosBadge").innerText = `${comparacao.clientesVariacao >= 0 ? "+" : ""}${comparacao.clientesVariacao} clientes`;            
-            document.getElementById("ticketMedioBadge").innerText = `${data.ticketMedioChange >= 0 ? "+" : ""}${data.ticketMedioChange}% vs semana anterior`;
+            // Atualizar badges dos cards principais
+            if (data.comparacaoSemanaAnterior) {
+                const comp = data.comparacaoSemanaAnterior;
+                
+                // Badge Receita
+                const receitaBadge = document.getElementById("receitaTotalBadge");
+                if (comp.receitaVariacao === 0) {
+                    receitaBadge.innerText = "Mesmo valor da semana anterior";
+                    receitaBadge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800";
+                } else {
+                    receitaBadge.innerText = `${comp.receitaVariacao > 0 ? "+" : ""}${comp.receitaVariacao}% vs semana anterior`;
+                    receitaBadge.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${comp.receitaVariacao > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+                }
+                
+                // Badge Agendamentos
+                const agendBadge = document.getElementById("agendamentosBadge");
+                agendBadge.innerText = `${comp.agendamentosVariacao >= 0 ? "+" : ""}${comp.agendamentosVariacao} vs semana anterior`;
+                agendBadge.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${comp.agendamentosVariacao > 0 ? 'bg-green-100 text-green-800' : comp.agendamentosVariacao < 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`;
+                
+                // Badge Clientes
+                const clientesBadge = document.getElementById("clientesUnicosBadge");
+                clientesBadge.innerText = `${comp.clientesVariacao >= 0 ? "+" : ""}${comp.clientesVariacao} vs semana anterior`;
+                clientesBadge.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${comp.clientesVariacao > 0 ? 'bg-green-100 text-green-800' : comp.clientesVariacao < 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`;
+            }
+            
+            // Atualizar seção de comparações detalhadas
+            if (data.comparacaoSemanaAnterior) {
+                const comp = data.comparacaoSemanaAnterior;
+                
+                // Receita
+                const variacaoReceitaEl = document.getElementById("variacaoReceita");
+                const variacaoReceitaAbsEl = document.getElementById("variacaoReceitaAbsoluta");
+                
+                if (comp.receitaVariacao === 0 && data.receitaTotal > 0) {
+                    variacaoReceitaEl.innerText = "Nova";
+                    variacaoReceitaEl.className = "text-lg font-bold text-green-600";
+                    variacaoReceitaAbsEl.innerText = `+R$ ${data.receitaTotal.toFixed(2)}`;
+                } else {
+                    variacaoReceitaEl.innerText = `${comp.receitaVariacao >= 0 ? "+" : ""}${comp.receitaVariacao}%`;
+                    variacaoReceitaEl.className = `text-lg font-bold ${comp.receitaVariacao >= 0 ? 'text-green-600' : 'text-red-600'}`;
+                    variacaoReceitaAbsEl.innerText = `${comp.receitaVariacao >= 0 ? "+" : ""}R$ ${Math.abs(comp.receitaAbsoluta || 0).toFixed(2)}`;
+                }
+                
+                // Agendamentos
+                const variacaoAgendEl = document.getElementById("variacaoAgendamentos");
+                const variacaoAgendPercEl = document.getElementById("variacaoAgendamentosPerc");
+                
+                variacaoAgendEl.innerText = `${comp.agendamentosVariacao >= 0 ? "+" : ""}${comp.agendamentosVariacao}`;
+                variacaoAgendEl.className = `text-lg font-bold ${comp.agendamentosVariacao > 0 ? 'text-green-600' : comp.agendamentosVariacao < 0 ? 'text-red-600' : 'text-gray-600'}`;
+                
+                if (comp.agendamentosVariacao === data.totalAgendamentos) {
+                    variacaoAgendPercEl.innerText = "Novos agendamentos";
+                } else {
+                    const percentual = comp.agendamentosVariacao / (data.totalAgendamentos - comp.agendamentosVariacao) * 100;
+                    variacaoAgendPercEl.innerText = `${comp.agendamentosVariacao >= 0 ? "+" : ""}${percentual.toFixed(1)}%`;
+                }
+                
+                // Clientes
+                const variacaoClientesEl = document.getElementById("variacaoClientes");
+                const variacaoClientesPercEl = document.getElementById("variacaoClientesPerc");
+                
+                variacaoClientesEl.innerText = `${comp.clientesVariacao >= 0 ? "+" : ""}${comp.clientesVariacao}`;
+                variacaoClientesEl.className = `text-lg font-bold ${comp.clientesVariacao > 0 ? 'text-green-600' : comp.clientesVariacao < 0 ? 'text-red-600' : 'text-gray-600'}`;
+                
+                if (comp.clientesVariacao === data.clientesUnicos) {
+                    variacaoClientesPercEl.innerText = "Novos clientes";
+                } else {
+                    const percentual = comp.clientesVariacao / (data.clientesUnicos - comp.clientesVariacao) * 100;
+                    variacaoClientesPercEl.innerText = `${comp.clientesVariacao >= 0 ? "+" : ""}${percentual.toFixed(1)}%`;
+                }
+                
+                // Ticket Médio
+                const variacaoTicketEl = document.getElementById("variacaoTicket");
+                const variacaoTicketAbsEl = document.getElementById("variacaoTicketAbsoluta");
+                
+                if (comp.receitaVariacao === 0 && comp.agendamentosVariacao > 0) {
+                    variacaoTicketEl.innerText = "Novo";
+                    variacaoTicketEl.className = "text-lg font-bold text-blue-600";
+                    variacaoTicketAbsEl.innerText = `R$ ${data.ticketMedio.toFixed(2)}`;
+                } else if (comp.ticketVariacao !== undefined) {
+                    variacaoTicketEl.innerText = `${comp.ticketVariacao >= 0 ? "+" : ""}${comp.ticketVariacao}%`;
+                    variacaoTicketEl.className = `text-lg font-bold ${comp.ticketVariacao >= 0 ? 'text-green-600' : 'text-red-600'}`;
+                    variacaoTicketAbsEl.innerText = `${comp.ticketVariacao >= 0 ? "+" : ""}R$ ${Math.abs(comp.ticketAbsoluto || 0).toFixed(2)}`;
+                } else {
+                    variacaoTicketEl.innerText = "N/A";
+                    variacaoTicketEl.className = "text-lg font-bold text-gray-600";
+                    variacaoTicketAbsEl.innerText = "-";
+                }
+            }
 
-            // Atualizar o resumo
-            document.getElementById("resumoTexto").innerText = data.resumo || "";
+            // Atualizar resumo
+            const resumoTexto = gerarResumoAutomatico(data);
+            document.getElementById("resumoTexto").innerText = resumoTexto;
+
+            // Renderizar visualizações
+            renderGraficos(data);
+            renderRankingClientes(data.topClientes, data);
+            renderTabelaAgendamentos(data.agendamentosDetalhados || data.agendamentos);
 
             // Mostrar o dashboard e esconder a página inicial
             document.getElementById("dashboard").classList.remove("hidden");
             document.body.classList.remove("gradient-bg");
             document.body.classList.add("bg-gray-50");
+        }
+
+        // Função para gerar resumo automático
+        function gerarResumoAutomatico(data) {
+            const comp = data.comparacaoSemanaAnterior || {};
+            let resumo = "";
+            
+            // Análise da performance
+            if (comp.receitaVariacao === 0 && data.receitaTotal > 0) {
+                resumo += "Parabéns pelo início das atividades! ";
+            } else if (comp.receitaVariacao > 10) {
+                resumo += "Excelente performance esta semana! ";
+            } else if (comp.receitaVariacao > 0) {
+                resumo += "Boa performance esta semana. ";
+            } else if (comp.receitaVariacao < -10) {
+                resumo += "A receita teve uma queda significativa esta semana. ";
+            }
+            
+            // Análise de clientes
+            if (comp.clientesVariacao > 0) {
+                resumo += `Você conquistou ${comp.clientesVariacao} novo${comp.clientesVariacao > 1 ? 's' : ''} cliente${comp.clientesVariacao > 1 ? 's' : ''}. `;
+            }
+            
+            // Serviço mais popular
+            if (data.performanceServicos) {
+                const servicoMaisPopular = Object.entries(data.performanceServicos)
+                    .sort((a, b) => b[1].receita - a[1].receita)[0];
+                if (servicoMaisPopular) {
+                    resumo += `"${servicoMaisPopular[0]}" foi o serviço que mais gerou receita (${((servicoMaisPopular[1].receita / data.receitaTotal) * 100).toFixed(0)}% do total). `;
+                }
+            }
+            
+            // Taxa de ocupação
+            if (data.taxaOcupacao < 50) {
+                resumo += "Há oportunidade para aumentar a taxa de ocupação e maximizar a receita.";
+            } else if (data.taxaOcupacao > 80) {
+                resumo += "Excelente taxa de ocupação!";
+            }
+            
+            return resumo || "Continue monitorando suas métricas para identificar oportunidades de crescimento.";
         }
 
         // Lógica principal ao carregar a página
@@ -281,7 +892,6 @@
             fetchDashboardData(token);
         } else {
             console.log("Nenhum token encontrado na URL");
-            document.getElementById("initial-content").classList.remove("hidden");
         }
 
         // Inicializar ícones Lucide
@@ -289,4 +899,3 @@
     </script>
 </body>
 </html>
-
