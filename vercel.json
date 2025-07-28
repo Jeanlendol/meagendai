@@ -1,4 +1,8 @@
 {
+  "buildCommand": "pnpm install && pnpm run build",
+  "installCommand": "pnpm install",
+  "ignoreCommand": "echo no ignore",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/(.*)",
@@ -6,4 +10,3 @@
     }
   ]
 }
-
